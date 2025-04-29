@@ -22,7 +22,7 @@ lock = threading.Lock()
 stop_event = threading.Event()
 
 def timestamp():
-    return datetime.now().strftime('%Y, %B %d, %H:%M:%S')
+    return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 def decrypt_data(encrypted_data):
     cipher = AES.new(SECRET_KEY, AES.MODE_CBC, IV)
