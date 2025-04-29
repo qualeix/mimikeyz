@@ -14,7 +14,6 @@ IV = b'\xed>\x86\x98\xed\xe5%\x99\x91\xe9r\x8b\t\xe3\xf2\xd2'
 HOST = '0.0.0.0'  # Listen on all network interfaces
 PORT = 43558
 LOG_FILE = 'loot.txt'
-#WRITE_INTERVAL = 5 * 60  # 5 minutes
 WRITE_INTERVAL = 10
 
 buffer = []
