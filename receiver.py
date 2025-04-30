@@ -17,11 +17,11 @@ from Crypto.Util.Padding import unpad
 
 
 # ─── CONFIGURATION SETTINGS ────────────────────────────────────────────────────────────────────────────────
-SECRET_KEY    = b'w\xd7\xc9=0\x17\xd1{\xe3\xc7{\x1a"\x8d\xa7\xb19\x87e\xb7gTQ\x98R\xed\xf2\x90\xbc\xfb2\xd2'
-IV            = b'\xed>\x86\x98\xed\xe5%\x99\x91\xe9r\x8b\t\xe3\xf2\xd2'
-HOST, PORT    = '0.0.0.0', 43558
-LOOT_DIR      = 'loot'
-WRITE_INTERVAL= 10
+SECRET_KEY     = b'w\xd7\xc9=0\x17\xd1{\xe3\xc7{\x1a"\x8d\xa7\xb19\x87e\xb7gTQ\x98R\xed\xf2\x90\xbc\xfb2\xd2'
+IV             = b'\xed>\x86\x98\xed\xe5%\x99\x91\xe9r\x8b\t\xe3\xf2\xd2'
+HOST, PORT     = '0.0.0.0', 43558
+LOOT_DIR       = 'loot'
+WRITE_INTERVAL = 10
 # ───────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 # Global variables to manage received data and program state
