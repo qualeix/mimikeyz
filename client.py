@@ -89,8 +89,8 @@ def send_data(data):
         return True
 
     except Exception as e:
-        # Swallow any socket/encryption error
-        return e
+        print(f"[!] {timestamp()} : Send error: {e}")
+        return False
 
 
 def cache_payload_to_disk(cached_data):
